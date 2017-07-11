@@ -1,10 +1,8 @@
 package org.htmlparser.beans;
 
-import java.net.URLConnection;
-
-import org.htmlparser.Parser;
-import org.htmlparser.util.ParserException;
 import org.htmlparser.util.EncodingChangeException;
+import org.htmlparser.util.NodeList;
+import org.htmlparser.util.ParserException;
 
 /**
  * Extract strings from a URL.
@@ -38,38 +36,27 @@ import org.htmlparser.util.EncodingChangeException;
  * don't want StringBean to wander off and get the content itself, either
  * because you already have it, it's not on a website etc.
  * 
- * @author Chinomso Bassey Ikwuagwu on Nov 5, 2016 9:02:29 AM
+ * @author Chinomso Bassey Ikwuagwu on Nov 5, 2016 8:30:45 AM
  */
-public class StringBean extends StringExtractingNodeVisitor 
+public class StringBeanForNodeList extends StringExtractingNodeVisitor 
 {
     
     /**
      * Property name in event where the URL changes.
      */
-    public static final String PROP_URL_PROPERTY = "URL";
-
-    /**
-     * Property name in event where the connection changes.
-     */
-    public static final String PROP_CONNECTION_PROPERTY = "connection";
+    public static final String PROP_NODES_PROPERTY = "nodes";
     
-    /**
-     * The parser used to extract strings.
-     */
-    private final Parser mParser;
+    private NodeList mNodes;
 
-    public StringBean() {
-        mParser = new Parser();
+    public StringBeanForNodeList() {
     }
 
-    public StringBean(int bufferSize, int maxSize) {
+    public StringBeanForNodeList(int bufferSize, int maxSize) {
         super(bufferSize, maxSize);
-        mParser = new Parser();
     }
 
-    public StringBean(boolean recurseChildren, boolean recurseSelf, int bufferSize, int maxSize) {
+    public StringBeanForNodeList(boolean recurseChildren, boolean recurseSelf, int bufferSize, int maxSize) {
         super(recurseChildren, recurseSelf, bufferSize, maxSize);
-        mParser = new Parser();
     }
 
     /**
@@ -84,7 +71,7 @@ public class StringBean extends StringExtractingNodeVisitor
         String ret;
 
         mCollapseState = 0;
-        mParser.visitAllNodesWith (this);
+        mNodes.visitAllNodesWith (this);
         ret = mBuffer.toString ();
         mBuffer = new StringBuilder(this.getBufferSize());
 
@@ -98,12 +85,12 @@ public class StringBean extends StringExtractingNodeVisitor
     protected void setStrings ()
     {
         mCollapseState = 0;
-        if (null != getURL ())
+        if (null != getNodes ())
             try
             {
                 try
                 {
-                    mParser.visitAllNodesWith (this);
+                    mNodes.visitAllNodesWith (this);
                     updateStrings (mBuffer.toString ());
                 }
                 finally
@@ -118,10 +105,10 @@ public class StringBean extends StringExtractingNodeVisitor
                 mIsStyle = false;
                 try
                 {   // try again with the encoding now in force
-                    mParser.reset ();
+//                    mParser.reset ();
                     mBuffer = new StringBuilder (this.getBufferSize());
                     mCollapseState = 0;
-                    mParser.visitAllNodesWith (this);
+                    mNodes.visitAllNodesWith (this);
                     updateStrings (mBuffer.toString ());
                 }
                 catch (ParserException pe)
@@ -155,15 +142,8 @@ public class StringBean extends StringExtractingNodeVisitor
     protected void resetStrings ()
     {
         if (null != mStrings)
-            try
-            {
-                mParser.setURL (getURL ());
-                setStrings ();
-            }
-            catch (ParserException pe)
-            {
-                updateStrings (pe.toString ());
-            }
+            
+            setStrings ();
     }
 
     //
@@ -188,114 +168,34 @@ public class StringBean extends StringExtractingNodeVisitor
     }
 
     /**
-     * Get the current URL.
-     * @return The URL from which text has been extracted, or <code>null</code>
+     * Get the current NodeList.
+     * @return The NodeList from which text has been extracted, or <code>null</code>
      * if this property has not been set yet.
      */
-    public String getURL ()
+    public NodeList getNodes ()
     {
-         return ((null != mParser) ? mParser.getURL () : null);
+         return (mNodes);
     }
 
     /**
      * Set the URL to extract strings from.
      * The text from the URL will be fetched, which may be expensive, so this
      * property should be set last.
-     * @param url The URL that text should be fetched from.
+     * @param nodes The NodeList that text should be fetched from.
      */
-    public void setURL (String url)
+    public void setNodes (NodeList nodes)
     {
-        String old;
-        URLConnection conn;
+        NodeList old;
 
-        old = getURL ();
-        conn = getConnection ();
-        if (((null == old) && (null != url)) || ((null != old)
-            && !old.equals (url)))
+        old = getNodes ();
+        
+        if (((null == old) && (null != nodes)) || ((null != old)
+            && !old.equals (nodes)))
         {
-            try
-            {
-                
-                mParser.setURL (url);
-                
-                mPropertySupport.firePropertyChange (
-                    PROP_URL_PROPERTY, old, getURL ());
-                mPropertySupport.firePropertyChange (
-                    PROP_CONNECTION_PROPERTY, conn, mParser.getConnection ());
-                setStrings ();
-            }
-            catch (ParserException pe)
-            {
-                updateStrings (pe.toString ());
-            }
-        }
-    }
-
-    /**
-     * Get the current connection.
-     * @return The connection that the parser has or <code>null</code> if it
-     * hasn't been set or the parser hasn't been constructed yet.
-     */
-    public URLConnection getConnection ()
-    {
-        return ((null != mParser) ? mParser.getConnection () : null);
-    }
-
-    /**
-     * Set the parser's connection.
-     * The text from the URL will be fetched, which may be expensive, so this
-     * property should be set last.
-     * @param connection New value of property Connection.
-     */
-    public void setConnection (URLConnection connection)
-    {
-        String url;
-        URLConnection conn;
-
-        url = getURL ();
-        conn = getConnection ();
-        if (((null == conn) && (null != connection))
-            || ((null != conn) && !conn.equals (connection)))
-        {
-            try
-            {
-                
-                mParser.setConnection (connection);
-                
-                mPropertySupport.firePropertyChange (
-                    PROP_URL_PROPERTY, url, getURL ());
-                mPropertySupport.firePropertyChange (
-                    PROP_CONNECTION_PROPERTY, conn, mParser.getConnection ());
-                setStrings ();
-            }
-            catch (ParserException pe)
-            {
-                updateStrings (pe.toString ());
-            }
-        }
-    }
-
-    public final Parser getParser() {
-        return mParser;
-    }
-    
-    /**
-     * Unit test.
-     * @param args Pass arg[0] as the URL to process.
-     */
-    public static void main (String[] args)
-    {
-        if (0 >= args.length)
-            System.out.println ("Usage: java -classpath htmlparser.jar"
-                + " org.htmlparser.beans.StringBean <http://whatever_url>");
-        else
-        {
-            StringBean sb = new StringBean ();
-            sb.setLinks (false);
-            sb.setReplaceNonBreakingSpaces (true);
-            sb.setCollapse (true);
-            sb.setURL (args[0]);
-            System.out.println (sb.getStrings ());
+            mNodes = nodes;
+            mPropertySupport.firePropertyChange (
+                PROP_NODES_PROPERTY, old, getNodes ());
+            setStrings ();
         }
     }
 }

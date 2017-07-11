@@ -109,7 +109,8 @@ import org.htmlparser.visitors.NodeVisitor;
 public class Parser
     implements
         Serializable,
-        ConnectionMonitor
+        ConnectionMonitor,
+        VisitableNodes
 {
     // Please don't change the formatting of the version variables below.
     // This is done so as to facilitate ant script processing.
@@ -716,6 +717,7 @@ public class Parser
      * @throws ParserException If a parse error occurs while traversing
      * the page with the visitor.
      */
+    @Override
     public void visitAllNodesWith (NodeVisitor visitor) throws ParserException
     {
         Node node;

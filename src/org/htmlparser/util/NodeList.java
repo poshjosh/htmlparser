@@ -26,12 +26,14 @@
 package org.htmlparser.util;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.htmlparser.Node;
 import org.htmlparser.NodeFilter;
+import org.htmlparser.VisitableNodes;
 import org.htmlparser.visitors.NodeVisitor;
 
-public class NodeList extends ArrayList<Node> {
+public class NodeList extends ArrayList<Node> implements VisitableNodes {
 
     public NodeList () { }
     
@@ -207,7 +209,10 @@ public class NodeList extends ArrayList<Node> {
      * list.visitAllNodesWith (visitor);
      * System.out.println (list.toHtml ());
      * </pre>
+     * @param visitor The visitor to visit all nodes with.
+     * @throws ParserException If a parse error occurs while visiting the nodes in this NodeList.
      */
+    @Override
     public void visitAllNodesWith (NodeVisitor visitor)
         throws ParserException {
         
@@ -218,4 +223,20 @@ public class NodeList extends ArrayList<Node> {
         
         visitor.finishedParsing ();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        
+        if (o == this)
+            return true;
+        
+        if (!(o instanceof List))
+            return false;
+        
+        if(this.size() != ((List)o).size()) {
+            return false;
+        }
+        
+        return super.equals(o);
+    }    
 }
