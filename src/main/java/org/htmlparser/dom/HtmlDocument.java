@@ -25,8 +25,12 @@ public interface HtmlDocument extends NodeList {
     
     Optional<MetaTag> getRobots();
 
+    String getKeywordsText(String outputIfNone);
+    
     Optional<MetaTag> getKeywords();
 
+    String getDescriptionText(String outputIfNone);
+    
     Optional<MetaTag> getDescription();
     
     /**

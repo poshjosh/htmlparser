@@ -155,6 +155,40 @@ public class HtmlDocumentImpl extends NodeListImpl implements HtmlDocument, Seri
     }
 
     @Override
+    public String getTitleText(String outputIfNone) {
+        final String output;
+        final TitleTag tag = this.getTitle();
+        if(tag != null) {
+            output = tag.getTitle();
+        }else{
+            output = null;
+        }
+        return output == null || output.isEmpty() ? outputIfNone : null;
+    }
+
+    @Override
+    public String getDescriptionText(String outputIfNone) {
+        final MetaTag tag = this.getDescription().orElse(null);
+        return this.getMetaTagContent(tag, outputIfNone);
+    }
+
+    @Override
+    public String getKeywordsText(String outputIfNone) {
+        final MetaTag tag = this.getKeywords().orElse(null);
+        return this.getMetaTagContent(tag, outputIfNone);
+    }
+
+    private String getMetaTagContent(MetaTag tag, String outputIfNone) {
+        final String output;
+        if(tag != null) {
+            output = tag.getAttributeValue("content");
+        }else{
+            output = null;
+        }
+        return output == null || output.isEmpty() ? outputIfNone : output;
+    }
+  
+    @Override
     public TitleTag getTitle() {
         if(this.title == null) {
             NodeList titles = this.extractAllNodesThatMatch(new NodeClassFilter(TitleTag.class), true);
@@ -178,16 +212,6 @@ public class HtmlDocumentImpl extends NodeListImpl implements HtmlDocument, Seri
         return this.metaTags;
     }
     
-    @Override
-    public String getTitleText(String outputIfNone) {
-        String output = null;
-        final TitleTag tag = getTitle();
-        if(tag != null) {
-            output = tag.getTitle();
-        }
-        return output == null || output.isEmpty() ? outputIfNone : output;
-    }
-
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
